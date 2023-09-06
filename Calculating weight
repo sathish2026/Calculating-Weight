@@ -1,0 +1,78 @@
+Sub CalculateWeight()
+    Dim ws As Worksheet
+    Dim sumRangeX As Range
+    Dim sumRangeY As Range
+    Dim firstSheet As Worksheet
+    Dim cell As Range
+    Dim totalSum As Double
+
+    ' Set the first worksheet as the active sheet.
+    Set firstSheet = ActiveWorkbook.Sheets(1)
+    
+    ' Determine whether to use column X or column Y for summation based on the presence of values in column X.
+    If WorksheetFunction.CountA(firstSheet.Range("X9:X300")) = 0 Then
+        Set sumRangeY = firstSheet.Range("Y9:Y300")
+    Else
+        Set sumRangeX = firstSheet.Range("X9:X300")
+    End If
+
+    ' Initialize the totalSum variable to zero.
+    totalSum = 0
+    
+    ' Check if sumRangeX or sumRangeY is not Nothing, and calculate the total sum accordingly.
+    If Not sumRangeX Is Nothing Then
+        For Each ws In ActiveWorkbook.Sheets
+            For Each cell In ws.Range(sumRangeX.Address)
+                ' Check the interior color of each cell, and exclude cells with color index 3 (typically red).
+                If cell.Interior.ColorIndex <> 3 Then
+                    totalSum = totalSum + cell.Value
+                End If
+            Next cell
+        Next ws
+    ElseIf Not sumRangeY Is Nothing Then
+        For Each ws In ActiveWorkbook.Sheets
+            For Each cell In ws.Range(sumRangeY.Address)
+                ' Check the interior color of each cell, and exclude cells with color index 3 (typically red).
+                If cell.Interior.ColorIndex <> 3 Then
+                    totalSum = totalSum + cell.Value
+                End If
+            Next cell
+        Next ws
+    End If
+
+    ' Delete any existing shape named "TotalBanner" on the first sheet, if it exists.
+    On Error Resume Next
+    firstSheet.Shapes("TotalBanner").Delete
+    On Error GoTo 0
+    
+    ' Create a banner text with the total weight.
+    Dim bannerText As String
+    bannerText = "TOTAL WEIGHT = " & Format(totalSum, "0.00")
+    Dim leftPos As Single
+    Dim topPos As Single
+    Dim widthBanner As Single
+    Dim heightBanner As Single
+
+    ' Define the position and dimensions of the banner.
+    leftPos = 1250
+    topPos = 250
+    widthBanner = 200
+    heightBanner = 30
+   
+    ' Create a text box shape for the banner on the first sheet.
+    With firstSheet.Shapes.AddTextbox(Orientation:=msoTextOrientationHorizontal, _
+                                      Left:=leftPos, Top:=topPos, Width:=widthBanner, Height:=heightBanner)
+        .Name = "TotalBanner"  ' Assign a name to the shape.
+        .TextFrame.Characters.Text = bannerText  ' Set the text content of the shape.
+        .TextFrame.Characters.Font.Size = 14  ' Set the font size of the text.
+        .Fill.ForeColor.RGB = RGB(0, 255, 0)  ' Set the fill color (green).
+        .OnAction = "DeleteBanner"  ' Assign a macro to run when the shape is clicked.
+    End With
+End Sub
+
+Sub DeleteBanner()
+    ' Delete the shape named "TotalBanner" on the active sheet, if it exists.
+    On Error Resume Next
+    ActiveSheet.Shapes("TotalBanner").Delete
+    On Error GoTo 0
+End Sub
